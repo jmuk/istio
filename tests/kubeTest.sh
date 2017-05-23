@@ -32,7 +32,7 @@ WRK_URL="https://storage.googleapis.com/istio-build-deps/wrk-linux"
 
 . ${ROOT}/istio.VERSION || error_exit "Could not source versions"
 
-while getopts :c:i:sn:m:x: arg; do
+while getopts :c:i:sn:m:x:b: arg; do
   case ${arg} in
     c) ISTIOCLI="${OPTARG}";;
     i) ISTIOCTL_URL="${OPTARG}";;
@@ -40,11 +40,16 @@ while getopts :c:i:sn:m:x: arg; do
     n) NAMESPACE="${OPTARG}";;
     m) MANAGER_HUB_TAG="${OPTARG}";; # Format: "<hub>,<tag>"
     x) MIXER_HUB_TAG="${OPTARG}";; # Format: "<hub>,<tag>"
+    b) CONFIG_BACKEND="${OPTARG}";;
     *) error_exit "Unrecognized argument -${OPTARG}";;
   esac
 done
 
 [[ -z ${NAMESPACE} ]] && NAMESPACE="$(generate_namespace)"
+
+if [[ "$CONFIG_BACKEND" = "redis" ]]; then
+    CONFIG_BACKEND_URL=redis://redis-master:6379/
+fi
 
 if [[ -z ${ISTIOCLI} ]]; then
     wget -q -O "${TEST_DIR}/istioctl" "${ISTIOCTL_URL}/istioctl-linux" || error_exit "Could not download istioctl"

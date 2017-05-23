@@ -95,6 +95,13 @@ function generate_istio_yaml() {
     sed -i "s|image: .*/\(.*\):.*|image: $MANAGER_HUB/\1:$MANAGER_TAG|" ${dest_dir}/istio-manager.yaml
     sed -i "s|image: .*/\(.*\):.*|image: $MANAGER_HUB/\1:$MANAGER_TAG|" ${dest_dir}/istio-ingress.yaml
     sed -i "s|image: .*/\(.*\):.*|image: $MIXER_HUB/\1:$MIXER_TAG|" ${dest_dir}/istio-mixer.yaml
+    if [[ "${CONFIG_BACKEND}" = "redis" ]]; then
+        echo "copying redis.yaml"
+        cp "${ROOT}/install/kubernetes/redis.yaml" ${dest_dir}
+    fi
+    if [[ -n "${CONFIG_BACKEND_URL}" ]]; then
+        sed -i "s|--configStoreURL=.*|--configStoreURL=${CONFIG_BACKEND_URL}|" ${dest_dir}/istio-mixer.yaml
+    fi
 }
 
 function generate_bookinfo_yaml() {

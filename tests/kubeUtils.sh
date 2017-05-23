@@ -44,10 +44,14 @@ function deploy_istio() {
 }
 
 function find_istio_endpoints() {
+    local num_endpoints=4
+    if [[ $CONFIG_BACKEND = "redis" ]]; then
+        num_endpoints=5
+    fi
     local endpoints=($(${K8CLI} get endpoints -n ${NAMESPACE} \
       -o jsonpath='{.items[*].subsets[*].addresses[*].ip}'))
     echo ${endpoints[@]}
-    [[ ${#endpoints[@]} -eq 4 ]] && return 0
+    [[ ${#endpoints[@]} -eq ${num_endpoints} ]] && return 0
     ${K8CLI} get endpoints -n ${NAMESPACE}
     return 1
 }
@@ -63,6 +67,15 @@ function cleanup_istioctl(){
 # Port forward mixer
 function setup_mixer(){
     print_block_echo "Setting up mixer"
+    mixer_name=$(${K8CLI} -n ${NAMESPACE} get pod -l istio=mixer -o jsonpath='{.items[0].metadata.name}')
+    if [[ -n "$CONFIG_BACKEND_URL" ]]; then
+        echo "Setting up the initial data in the config backend" ${CONFIG_BACKEND_URL}
+        ${K8CLI} -n ${NAMESPACE} exec ${mixer_name} -- /usr/local/bin/importer -source fs:///etc/opt/mixer/configroot -destination ${CONFIG_BACKEND_URL}
+        [[ $? -eq 0 ]] || error_exit 'Failed to initialize data'
+        echo "Done. Waiting for propataging the changes to mixer..."
+        # TODO: consider a better waiting policy
+        sleep 5
+    fi
     ${K8CLI} -n ${NAMESPACE} port-forward $(${K8CLI} -n ${NAMESPACE} get pod -l istio=mixer \
     -o jsonpath='{.items[0].metadata.name}') 9091 9095:42422 &
     pfPID2=$!
