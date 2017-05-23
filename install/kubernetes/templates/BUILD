@@ -8,3 +8,11 @@ filegroup(
     ],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "redis_backend",
+    srcs = [
+        "redis.yaml",
+    ],
+    visibility = ["//visibility:public"],
+)

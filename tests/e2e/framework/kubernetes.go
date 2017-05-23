@@ -21,6 +21,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
+	"time"
 
 	"github.com/golang/glog"
 
@@ -37,14 +39,15 @@ const (
 )
 
 var (
-	namespace    = flag.String("namespace", "", "Namespace to use for testing (empty to create/delete temporary one)")
-	mixerHub     = flag.String("mixer_hub", os.Getenv(mixerHubEnvVar), "Mixer hub")
-	mixerTag     = flag.String("mixer_tag", os.Getenv(mixerTagEnvVar), "Mixer tag")
-	managerHub   = flag.String("manager_hub", os.Getenv(managerHubEnvVar), "Manager hub")
-	managerTag   = flag.String("manager_tag", os.Getenv(managerTagEnvVar), "Manager tag")
-	caHub        = flag.String("ca_hub", "", "Ca hub")
-	caTag        = flag.String("ca_tag", "", "Ca tag")
-	localCluster = flag.Bool("use_local_cluster", false, "Whether the cluster is local or not")
+	namespace     = flag.String("namespace", "", "Namespace to use for testing (empty to create/delete temporary one)")
+	mixerHub      = flag.String("mixer_hub", os.Getenv(mixerHubEnvVar), "Mixer hub")
+	mixerTag      = flag.String("mixer_tag", os.Getenv(mixerTagEnvVar), "Mixer tag")
+	managerHub    = flag.String("manager_hub", os.Getenv(managerHubEnvVar), "Manager hub")
+	managerTag    = flag.String("manager_tag", os.Getenv(managerTagEnvVar), "Manager tag")
+	configBackend = flag.String("config_backend", "", "The config backend type of mixer")
+	caHub         = flag.String("ca_hub", "", "Ca hub")
+	caTag         = flag.String("ca_tag", "", "Ca tag")
+	localCluster  = flag.Bool("use_local_cluster", false, "Whether the cluster is local or not")
 
 	modules = []string{
 		"manager",
@@ -67,6 +70,9 @@ type KubeInfo struct {
 
 	Ingress string
 
+	ConfigURL     string
+	ConfigPodFile string
+
 	localCluster     bool
 	namespaceCreated bool
 
@@ -88,6 +94,13 @@ func newKubeInfo(tmpDir, runID string) (*KubeInfo, error) {
 	}
 	a := NewAppManager(tmpDir, *namespace, i)
 
+	var configURL string
+	var configPodFile string
+	if *configBackend == "redis" {
+		configURL = "redis://redis-master:6379/"
+		configPodFile = "redis.yaml"
+	}
+
 	return &KubeInfo{
 		Namespace:        *namespace,
 		namespaceCreated: false,
@@ -95,12 +108,14 @@ func newKubeInfo(tmpDir, runID string) (*KubeInfo, error) {
 		ManagerImage:     fmt.Sprintf("%s/manager:%s", *managerHub, *managerTag),
 		CaImage:          fmt.Sprintf("%s/ca:%s", *caHub, *caTag),
 		// Proxy and Manager are released together and share the same hub and tag.
-		ProxyImage:   fmt.Sprintf("%s/proxy_debug:%s", *managerHub, *managerTag),
-		TmpDir:       tmpDir,
-		yamlDir:      yamlDir,
-		localCluster: *localCluster,
-		Istioctl:     i,
-		AppManager:   a,
+		ProxyImage:    fmt.Sprintf("%s/proxy_debug:%s", *managerHub, *managerTag),
+		TmpDir:        tmpDir,
+		yamlDir:       yamlDir,
+		ConfigURL:     configURL,
+		ConfigPodFile: configPodFile,
+		localCluster:  *localCluster,
+		Istioctl:      i,
+		AppManager:    a,
 	}, nil
 }
 
@@ -118,6 +133,14 @@ func (k *KubeInfo) Setup() error {
 	}
 	k.namespaceCreated = true
 
+	if len(k.ConfigPodFile) > 0 {
+		yamlFile := util.GetResourcePath(filepath.Join(istioInstallDir, k.ConfigPodFile))
+		if err = util.KubeApply(k.Namespace, yamlFile); err != nil {
+			glog.Errorf("Kubectl apply %s failed", yamlFile)
+			return err
+		}
+	}
+
 	if err = k.deployIstio(); err != nil {
 		glog.Error("Failed to deployIstio.")
 		return err
@@ -133,7 +156,7 @@ func (k *KubeInfo) Setup() error {
 		return err
 	}
 	k.Ingress = in
-	return nil
+	return k.maybeSetupConfigBackend()
 }
 
 // Teardown clean up everything created by setup
@@ -193,9 +216,34 @@ func (k *KubeInfo) generateIstioCore(dst, module string) error {
 	}
 	r := regexp.MustCompile(`image: .*(\/.*):.*`)
 	content := r.ReplaceAllLiteral(ori, image)
+	if module == "mixer" && len(k.ConfigURL) > 0 {
+		content = regexp.MustCompile(`(--configStoreURL=).*`).ReplaceAll(content, []byte("${1}"+k.ConfigURL))
+	}
 	err = ioutil.WriteFile(dst, content, 0600)
 	if err != nil {
 		glog.Errorf("Cannot write into generated yaml file %s", dst)
 	}
 	return err
+}
+
+func (k *KubeInfo) maybeSetupConfigBackend() error {
+	if len(k.ConfigURL) == 0 {
+		return nil
+	}
+
+	getMixerCmd := fmt.Sprintf("kubectl -n %s get pod -l istio=mixer -o jsonpath='{.items[0].metadata.name}'", k.Namespace)
+	mixerPod, err := util.Shell(getMixerCmd)
+	if err != nil {
+		return err
+	}
+	mixerPod = strings.Trim(mixerPod, "'")
+
+	importCmd := fmt.Sprintf("kubectl -n %s exec %s -- /usr/local/bin/importer -source fs:///etc/opt/mixer/configroot -destination %s", k.Namespace, mixerPod, k.ConfigURL)
+	_, err = util.Shell(importCmd)
+	if err != nil {
+		return err
+	}
+	// wait for mixer to reload the new config.
+	time.Sleep(time.Second * 5)
+	return nil
 }
