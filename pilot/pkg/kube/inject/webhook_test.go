@@ -35,6 +35,7 @@ import (
 	"istio.io/istio/pilot/pkg/kube/admit/testcerts"
 	"istio.io/istio/pilot/pkg/model"
 	"istio.io/istio/pilot/test/util"
+	"istio.io/istio/pkg/log/testutil"
 )
 
 func TestInjectRequired(t *testing.T) {
@@ -513,6 +514,8 @@ volumes:
 }
 
 func BenchmarkInjectServe(b *testing.B) {
+	bl := testutil.NewBenchmarkLogger(b)
+	defer bl.Done()
 	mesh := model.DefaultMeshConfig()
 	params := &Params{
 		InitImage:       InitImageName(unitTestHub, unitTestTag, false),

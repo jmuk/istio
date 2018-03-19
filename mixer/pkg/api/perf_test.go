@@ -30,6 +30,7 @@ import (
 	"istio.io/istio/mixer/pkg/pool"
 	"istio.io/istio/mixer/pkg/runtime"
 	"istio.io/istio/mixer/pkg/status"
+	"istio.io/istio/pkg/log/testutil"
 )
 
 type benchState struct {
@@ -148,6 +149,8 @@ func BenchmarkAPI_Unary_NoGlobalDict_Compress(b *testing.B) {
 }
 
 func unaryBench(b *testing.B, grpcCompression, useGlobalDict bool) {
+	bl := testutil.NewBenchmarkLogger(b)
+	defer bl.Done()
 	bs, err := prepBenchState()
 	if err != nil {
 		b.Fatalf("unable to prep test state %v", err)

@@ -1,0 +1,31 @@
+# 3/19/2018
+BenchmarkMeshXds/SubsetEndpoints/EP_20000__Median__Matched_16-8         	  500000	      3402 ns/op	     732 B/op	       4 allocs/op
+BenchmarkMeshXds/SubsetEndpoints/EP_20000__1σ__Matched_10-8             	 1000000	      1558 ns/op	     306 B/op	       3 allocs/op
+BenchmarkMeshXds/SubsetEndpoints/EP_20000__2σ__Matched_3-8              	 3000000	       537 ns/op	      80 B/op	       2 allocs/op
+BenchmarkMeshXds/SubsetEndpoints/EP_50000__Median__Matched_40-8         	  200000	      8261 ns/op	    1737 B/op	       6 allocs/op
+BenchmarkMeshXds/SubsetEndpoints/EP_50000__1σ__Matched_25-8             	  300000	      4377 ns/op	     866 B/op	       4 allocs/op
+BenchmarkMeshXds/SubsetEndpoints/EP_50000__2σ__Matched_6-8              	 2000000	       845 ns/op	      96 B/op	       2 allocs/op
+BenchmarkMeshXds/SubsetEndpoints/EP_100000__Median__Matched_60-8        	  200000	     13288 ns/op	    3574 B/op	       9 allocs/op
+BenchmarkMeshXds/SubsetEndpoints/EP_100000__1σ__Matched_37-8            	  200000	      8875 ns/op	    1722 B/op	       6 allocs/op
+BenchmarkMeshXds/SubsetEndpoints/EP_100000__2σ__Matched_9-8             	 1000000	      1272 ns/op	     304 B/op	       3 allocs/op
+BenchmarkMeshXds/SubsetEndpoints/EP_1000000__Median__Matched_240-8      	   30000	     45720 ns/op	   15012 B/op	      18 allocs/op
+BenchmarkMeshXds/SubsetEndpoints/EP_1000000__1σ__Matched_146-8          	  100000	     22513 ns/op	    7674 B/op	      12 allocs/op
+BenchmarkMeshXds/SubsetEndpoints/EP_1000000__2σ__Matched_33-8           	  300000	      5808 ns/op	    1676 B/op	       6 allocs/op
+BenchmarkMeshUpdates/Reconcile/EP_1000-8                                	    2000	    914196 ns/op	  178752 B/op	    2004 allocs/op
+BenchmarkMeshUpdates/Reconcile/EP_5000-8                                	     200	   5796457 ns/op	  778826 B/op	   10004 allocs/op
+BenchmarkMeshUpdates/Reconcile/EP_10000-8                               	     100	  14464977 ns/op	 1557568 B/op	   20004 allocs/op
+# Disabled these two tests for now, since they are unstable on allocs/op (and bin/perfcheck.sh has zero tolerance on it).
+#BenchmarkMeshUpdates/Reconcile/EP_25000-8                               	      30	  39724002 ns/op	 3582009 B/op	   50789 allocs/op
+#BenchmarkMeshUpdates/Reconcile/EP_50000-8                               	      20	  91571985 ns/op	 7167487 B/op	  101670 allocs/op
+BenchmarkMeshUpdates/UpdateRules/EP_20000__Median__Matched_16-8         	   30000	     48403 ns/op	    5000 B/op	      28 allocs/op
+BenchmarkMeshUpdates/UpdateRules/EP_20000__1σ__Matched_10-8             	   50000	     37833 ns/op	    3942 B/op	      28 allocs/op
+BenchmarkMeshUpdates/UpdateRules/EP_20000__2σ__Matched_3-8              	  100000	     21172 ns/op	    3448 B/op	      28 allocs/op
+BenchmarkMeshUpdates/UpdateRules/EP_50000__Median__Matched_40-8         	   10000	    114699 ns/op	    7351 B/op	      30 allocs/op
+BenchmarkMeshUpdates/UpdateRules/EP_50000__1σ__Matched_25-8             	   20000	     74738 ns/op	    5329 B/op	      31 allocs/op
+BenchmarkMeshUpdates/UpdateRules/EP_50000__2σ__Matched_6-8              	   50000	     26763 ns/op	    3447 B/op	      28 allocs/op
+BenchmarkMeshUpdates/UpdateRules/EP_100000__Median__Matched_60-8        	   10000	    205330 ns/op	   16373 B/op	      45 allocs/op
+BenchmarkMeshUpdates/UpdateRules/EP_100000__1σ__Matched_37-8            	   10000	    127524 ns/op	    9664 B/op	      39 allocs/op
+BenchmarkMeshUpdates/UpdateRules/EP_100000__2σ__Matched_9-8             	   30000	     41963 ns/op	    5231 B/op	      37 allocs/op
+BenchmarkMeshUpdates/UpdateRules/EP_1000000__Median__Matched_240-8      	     500	   2387151 ns/op	  133007 B/op	     111 allocs/op
+BenchmarkMeshUpdates/UpdateRules/EP_1000000__1σ__Matched_146-8          	    1000	   1315569 ns/op	   71824 B/op	     114 allocs/op
+BenchmarkMeshUpdates/UpdateRules/EP_1000000__2σ__Matched_33-8           	    5000	    308690 ns/op	   23844 B/op	      94 allocs/op

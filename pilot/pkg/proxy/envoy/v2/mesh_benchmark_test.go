@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	route "istio.io/api/networking/v1alpha3"
+	"istio.io/istio/pkg/log/testutil"
 )
 
 // samplePoint stores the index to the rule, index to the subset and the count of endpoints in that subset.
@@ -41,6 +42,8 @@ type dataSet struct {
 }
 
 func BenchmarkMeshXds(b *testing.B) {
+	bl := testutil.NewBenchmarkLogger(b)
+	defer bl.Done()
 	b.Run("SubsetEndpoints", func(b *testing.B) {
 		dataSets := []dataSet{{
 			cntEps:           20000,

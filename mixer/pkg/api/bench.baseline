@@ -1,0 +1,5 @@
+# 3/19/2018
+BenchmarkAPI_Unary_GlobalDict_NoCompress-8     	   50000	     26636 ns/op	   16742 B/op	     220 allocs/op
+BenchmarkAPI_Unary_GlobalDict_Compress-8       	   20000	    100363 ns/op	  249308 B/op	     240 allocs/op
+BenchmarkAPI_Unary_NoGlobalDict_NoCompress-8   	   30000	     38021 ns/op	   25008 B/op	     261 allocs/op
+BenchmarkAPI_Unary_NoGlobalDict_Compress-8     	   10000	    152365 ns/op	  286363 B/op	     288 allocs/op
